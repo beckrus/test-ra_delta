@@ -7,7 +7,7 @@ from src.database import Base
 if typing.TYPE_CHECKING:
     from src.models.parcels import ParcelsOrm
 
-    
+
 class ParcelTypesOrm(Base):
     __tablename__ = "types"
 

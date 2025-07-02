@@ -5,7 +5,8 @@ from src.database import Base
 
 if typing.TYPE_CHECKING:
     from src.models.parcels import ParcelsOrm
-    
+
+
 class SessionsOrm(Base):
     __tablename__ = "sessions"
 

@@ -13,7 +13,7 @@ class ParcelsOrm(Base):
     __tablename__ = "parcels"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String)
+    name: Mapped[str] = mapped_column(String(100))
     weight: Mapped[float] = mapped_column(Float)
     cost_usd: Mapped[int] = mapped_column(Integer)
 
@@ -23,4 +23,3 @@ class ParcelsOrm(Base):
     type_id: Mapped[int] = mapped_column(ForeignKey("types.id"), nullable=False)
 
     type: Mapped["ParcelTypesOrm"] = relationship("ParcelTypesOrm", backref="parcels")
-
