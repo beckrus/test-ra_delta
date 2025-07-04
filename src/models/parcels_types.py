@@ -13,6 +13,5 @@ class ParcelTypesOrm(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     parcels: Mapped[list["ParcelsOrm"]] = relationship("ParcelsOrm", back_populates="type")
