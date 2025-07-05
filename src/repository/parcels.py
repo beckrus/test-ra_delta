@@ -102,6 +102,7 @@ class ParcelsRepository:
             weight=parcel.weight,
             type=parcel.type.name,
             cost_usd=parcel.cost_usd,
+            delivery_cost=parcel.delivery_cost,
         )
 
     async def get_by_id_wo_session(self, parcel_id: int) -> ResponseParcelDTO:
