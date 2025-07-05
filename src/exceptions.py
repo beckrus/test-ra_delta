@@ -41,13 +41,25 @@ class RateProviderError(BaseException):
 class RateCacheError(BaseException):
     detail = "Something went wrong"
 
+
 class TaskNotFoundHTTPException(BaseHTTPException):
     status_code = 404
     detail = "Task not found"
 
+
 class FKObjectNotFoundException(BaseException):
     detail = "Foreign Key not found"
+
 
 class TypeNotFoundHTTPException(BaseHTTPException):
     status_code = 404
     detail = "Parcel Type not found"
+
+
+class ParcelAlreadyAssignedException(Exception):
+    detail = "Parcel already assigned"
+
+
+class ParcelAlreadyAssignedHTTPException(BaseHTTPException):
+    status_code = 409
+    detail = "Parcel already assigned to the transport company"

@@ -5,7 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 from src.repository.utils import get_missing_fk
-from src.exceptions import FKObjectNotFoundException, ParcelNotFoundException
+from src.exceptions import (
+    FKObjectNotFoundException,
+    ParcelAlreadyAssignedException,
+    ParcelNotFoundException,
+)
 from src.schemas.parcels import (
     AddParcelDTO,
     ParcelFiltersDTO,
@@ -37,8 +41,8 @@ class ParcelsRepository:
                 f"Can't add data in DB, error type: {type(e.orig.__cause__)=}, input {data=}"
             )
             if e.orig.args[0] == 1452:
-                key, value = get_missing_fk(str(e))
-                logging.error(f"Missing Key:{key}, Value:{value}")
+                key = get_missing_fk(str(e))
+                logging.error(f"Missing FOREIGN KEY: {key}")
                 raise FKObjectNotFoundException from e
             raise e
 
@@ -120,6 +124,23 @@ class ParcelsRepository:
         )
         await self.session.execute(stmt)
 
+    async def assign_transport_company(self, parcel_id: int, transport_company_id: int) -> bool:
+        stmt = select(self.model).filter_by(id=parcel_id).with_for_update()
+        result = await self.session.execute(stmt)
+        parcel = result.scalars().one_or_none()
+        if not parcel:
+            raise ParcelNotFoundException
+        if parcel.transport_company_id is not None:
+            raise ParcelAlreadyAssignedException
+        update_stmt = (
+            update(self.model)
+            .filter_by(id=parcel_id)
+            .values(transport_company_id=transport_company_id)
+        )
+        await self.session.execute(update_stmt)
+
+        return True
+
     async def update_delivery_cost_batch(self, delivery_costs: list[ParcelUpdateCostDTO]) -> int:
         data = [n.model_dump() for n in delivery_costs]
         stmt = update(self.model)
@@ -127,10 +148,12 @@ class ParcelsRepository:
         return len(data)
 
     async def get_without_delivery_cost(self) -> list[ResponseParcelDTO]:
-        stmt = (select(self.model)
-                .options(selectinload(self.model.type))
-                .filter_by(delivery_cost=None)
-                .with_for_update(skip_locked=True))
+        stmt = (
+            select(self.model)
+            .options(selectinload(self.model.type))
+            .filter_by(delivery_cost=None)
+            .with_for_update(skip_locked=True)
+        )
         result = await self.session.execute(stmt)
         return [
             ResponseParcelDTO(

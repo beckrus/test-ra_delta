@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2rem;
+            background-color: #f9f9f9;
+        }
+
+        .session-info {
+            padding: 1rem;
+            background-color: #eef;
+            border: 1px solid #ccd;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+        }
+
+        .parcel {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .parcel-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty {
+            color: #666;
+            font-style: italic;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 10% auto;
+            padding: 2rem;
+            border: 1px solid #ccc;
+            width: 400px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        label {
+            display: block;
+            margin-top: 1rem;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 0.55rem 0.75rem;
+            margin-top: 0.2rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            box-sizing: border-box;
+            height: 38px;
+        }
+        button {
+            display: inline-block;
+            font-weight: 400;
+            color: #fff;
+            background-color: #0d6efd;
+            border: 1px solid #0d6efd;
+            padding: 0.375rem 0.75rem;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border-radius: 0.375rem;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+
+        button:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+        }
+
+        #errorDiv {
+            display: none; /* скрыт по умолчанию */
+            color: #842029;
+            background-color: #f8d7da;
+            border: 1px solid #f5c2c7;
+            padding: 0.75rem 1.25rem;
+            margin-top: 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+    </style>
+</head>
+<body>
+<button onclick="openModal()">Register Parcel</button>
+{% if session_id %}
+    <div class="session-info">
+        <p><strong>Session ID:</strong> {{ session_id }}</p>
+    </div>
+{% endif %}
+{% if parcels %}
+        {% for parcel in parcels %}
+            <div class="parcel">
+                <div class="parcel-title">{{ parcel.name }} (ID: {{ parcel.id }})</div>
+                <p><strong>Type:</strong> {{ parcel.type }}</p>
+                <p><strong>Weight:</strong> {{ parcel.weight }}g</p>
+                <p><strong>Cost (USD):</strong> {{ parcel.cost_usd }}$</p>
+                <p><strong>Delivery Cost:</strong>
+                    {% if parcel.delivery_cost is not none %}
+                        {{ parcel.delivery_cost }}₽
+                    {% else %}
+                        Не рассчитано
+                    {% endif %}
+                </p>
+            </div>
+        {% endfor %}
+{% else %}
+    <p class="empty">No parcels found for this session.</p>
+{% endif %}
+<!-- Modal Structure -->
+<div id="parcelModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Register Parcel</h2>
+
+        <form id="parcel-form">
+            <label for="name">Parcel Name:</label>
+            <input type="text" id="name" name="name" maxlength="100" required>
+
+            <label for="weight">Weight (g):</label>
+            <input type="number" id="weight" name="weight" step="0.01" min="1" required>
+
+            <label for="type_id">Type:</label>
+            <select id="type_id" name="type_id" required>
+                <option value="">-- Select a type --</option>
+                {% for type in types %}
+                    <option value="{{ type.id }}">{{ type.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="cost_usd">Cost (USD):</label>
+            <input type="number" id="cost_usd" name="cost_usd" step="0.01" min="0" required>
+
+            <br><br>
+            <button type="submit">Submit</button>
+        </form>
+        <div id="errorDiv"></div>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById("parcel-form");
+    const error_div = document.getElementById("errorDiv");
+
+    function openModal() {
+        document.getElementById("parcelModal").style.display = "block";
+    }
+
+    function closeModal() {
+        document.getElementById("parcelModal").style.display = "none";
+        error_div.innerText = ""
+    }
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        error_div.innerText = ""
+        const data = {
+            name: form.name.value,
+            weight: parseFloat(form.weight.value),
+            type_id: parseInt(form.type_id.value),
+            cost_usd: parseFloat(form.cost_usd.value)
+        };
+
+        try {
+            const response = await fetch("/parcels", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                console.error(`Ошибка: статус ${response.status} ${response.statusText}`);
+                try {
+                    const error_data = await response.json();
+                    console.error("Ошибка с сервера:", error_data);
+                    error_div.innerText = `Error: ${error_data['detail']}`;
+                    error_div.style.display = "block";
+                } catch {
+                    console.error("Не удалось прочитать тело ответа");
+                }
+            }
+        } catch (error) {
+            console.log(error)
+            error_div.innerText = "Error: " + error;
+        }
+    });
+</script>
+</body>
+</html>

@@ -16,11 +16,13 @@ def get_db_manager() -> DBManager:
 
 
 async def get_db() -> AsyncGenerator[DBManager, Any]:
+    """Return database manager"""
     async with get_db_manager() as db:
         yield db
 
 
 def create_session_id() -> str:
+    """return UUID4 as string"""
     return str(uuid.uuid4())
 
 

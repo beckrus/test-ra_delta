@@ -6,6 +6,13 @@ from src.repository.parcels_types import ParcelsTypesRepository
 
 
 class DBManager:
+    """
+    Database manager.
+
+    Provides access to repositories and manages database session.
+    Supports async context manager for automatic session closure.
+    """
+
     def __init__(self, session_factory: Callable[[], AsyncSession]):
         self.session_factory = session_factory
 

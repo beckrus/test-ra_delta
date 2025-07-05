@@ -6,7 +6,7 @@ class RegisterParcelDTO(BaseModel):
     name: str = Field(max_length=100)
     weight: float = Field(ge=1)
     type_id: int
-    cost_usd: float
+    cost_usd: float = Field(ge=0)
 
 
 class AddParcelDTO(RegisterParcelDTO):
@@ -40,3 +40,13 @@ class ParcelFiltersDTO(BaseModel):
 
 class ParcelUpdateCostDTO(ParcelIdDTO):
     delivery_cost: float
+
+
+class AssignTransportDTO(ParcelIdDTO):
+    transport_company_id: int = Field(gt=0)
+
+
+class AssignTransportResponseDTO(BaseModel):
+    success: bool
+    message: str
+    parcel_id: int

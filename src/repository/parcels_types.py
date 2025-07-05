@@ -23,7 +23,6 @@ class ParcelsTypesRepository:
         result = await self.session.execute(query)
         return ParcelTypeDTO.model_validate(result.scalars().one(), from_attributes=True)
 
-    async def add(self, data: ParcelTypeAddDTO) -> ParcelTypeDTO:
-        stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
-        result = await self.session.execute(stmt)
-        return ParcelTypeDTO.model_validate(result.scalars().one(), from_attributes=True)
+    async def add(self, data: ParcelTypeAddDTO) -> None:
+        stmt = insert(self.model).values(**data.model_dump())
+        await self.session.execute(stmt)

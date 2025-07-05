@@ -1,5 +1,4 @@
 import logging
-import math
 from src.api.dependencies import get_db_manager_null_pull
 from src.utils.exchange_rate import get_current_usd_rate
 from src.schemas.parcels import ParcelUpdateCostDTO
@@ -9,15 +8,21 @@ logger = logging.getLogger(__name__)
 
 
 def calc_cost(weight: float, cost_usd: float, usd_rate: float):
-    """ weight in gramms
-        Стоимость = (вес в кг * 0.5 + стоимость содержимого в долларах * 0.01 ) * курс доллара к рублю
+    """weight in gramms
+    Стоимость = (вес в кг * 0.5 + стоимость содержимого в долларах * 0.01 ) * курс доллара к рублю
     """
-    result = ((weight/1000) * 0.5 + cost_usd * 0.01) * usd_rate
+    result = ((weight / 1000) * 0.5 + cost_usd * 0.01) * usd_rate
     return round(result, 2)
 
 
 @broker.task(schedule=[{"cron": "*/1 * * * *"}])
 async def calculate_delivery_cost_for_parcel() -> bool:
+    """
+    TaskIq task to calculate delivery cost for all parcels.
+
+    Runs on a schedule and updates delivery_cost
+    for all parcels that do not have this field.
+    """
     logger.info("Calculating delivery cost for parcels")
 
     usd_rate = await get_current_usd_rate()

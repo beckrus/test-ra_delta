@@ -26,6 +26,8 @@ class AbstractRateCache(ABC):
 
 
 class CBRRateProvider(AbstractRateProvider):
+    """Rate Provider for CBRF"""
+
     def __init__(self):
         self.url = "https://www.cbr-xml-daily.ru/daily_json.js"
 
@@ -54,6 +56,8 @@ class CBRRateProvider(AbstractRateProvider):
 
 
 class RedisRateCache(AbstractRateCache):
+    """Cache Provider for Redis as storage"""
+
     def __init__(self, redis_url: str, key: str = "usd_to_rub_rate", ttl: int = 3600):
         self.redis = aioredis.from_url(redis_url, encoding="utf-8", decode_responses=True)
         self.key = key
@@ -76,6 +80,11 @@ class RedisRateCache(AbstractRateCache):
 
 
 class ExchangeRateService:
+    """
+    Service for fetching currency rate with caching.
+    Use pattern strategy for rate provider and cache
+    """
+
     def __init__(self, provider: AbstractRateProvider, cache: AbstractRateCache):
         self.provider = provider
         self.cache = cache

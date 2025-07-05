@@ -5,6 +5,7 @@ Revises: 5e2acd2269dc
 Create Date: 2025-07-05 09:05:54.454454
 
 """
+
 from typing import Sequence, Union
 from alembic import op
 from sqlalchemy import text
@@ -19,20 +20,14 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     connection = op.get_bind()
-    
+
     result = connection.execute(text("SELECT COUNT(*) FROM types")).scalar()
-    
+
     if result == 0:
-        default_types = [
-            "('одежда')",
-            "('электроника')",
-            "('разное')"
-        ]
-        
+        default_types = ["('одежда')", "('электроника')", "('разное')"]
+
         values = ", ".join(default_types)
-        connection.execute(
-            text(f"INSERT INTO types (name) VALUES {values}")
-        )
+        connection.execute(text(f"INSERT INTO types (name) VALUES {values}"))
         print("Added default parcel types: одежда, электроника, разное")
     else:
         print("Types table already contains data, skipping initialization")
@@ -41,6 +36,4 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Downgrade schema."""
     connection = op.get_bind()
-    connection.execute(
-        text("DELETE FROM types WHERE name IN ('одежда', 'электроника', 'разное')")
-    )
+    connection.execute(text("DELETE FROM types WHERE name IN ('одежда', 'электроника', 'разное')"))

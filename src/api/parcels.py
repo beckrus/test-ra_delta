@@ -2,13 +2,22 @@ from fastapi import APIRouter, Query, Response
 
 from src.exceptions import (
     FKObjectNotFoundException,
+    ParcelAlreadyAssignedException,
+    ParcelAlreadyAssignedHTTPException,
     ParcelNotFoundException,
     ParcelNotFoundHTTPException,
     SessionNotFoundException,
     SessionNotFoundHTTPException,
     TypeNotFoundHTTPException,
 )
-from src.schemas.parcels import ParcelFiltersDTO, RegisterParcelDTO, ParcelIdDTO, ResponseParcelDTO
+from src.schemas.parcels import (
+    AssignTransportDTO,
+    AssignTransportResponseDTO,
+    ParcelFiltersDTO,
+    RegisterParcelDTO,
+    ParcelIdDTO,
+    ResponseParcelDTO,
+)
 from src.api.dependencies import DBDep, SessionIdDep, create_session_id
 
 
@@ -35,7 +44,7 @@ async def register_parcel(
         result = await db.parcels.add(data, session_id)
         await db.commit()
         return result
-    except FKObjectNotFoundException as e:
+    except FKObjectNotFoundException:
         raise TypeNotFoundHTTPException
     except SessionNotFoundException as e:
         raise SessionNotFoundHTTPException from e
@@ -75,3 +84,22 @@ async def get_my_parcel_by_id(
         return await db.parcels.get_by_id(parcel_id=parcel_id, session_id=session_id)
     except ParcelNotFoundException as e:
         raise ParcelNotFoundHTTPException from e
+
+
+@router.post("/{parcel_id}/assign-transport")
+async def assign_transport_company(
+    data: AssignTransportDTO, db: DBDep) -> AssignTransportResponseDTO:
+    try:
+        result = await db.parcels.assign_transport_company(
+            parcel_id=data.id, transport_company_id=data.transport_company_id
+        )
+        await db.commit()
+        return AssignTransportResponseDTO(
+            success=result,
+            message=f"Parcel succesfully assigned to the transport company with id {data.transport_company_id}",
+            parcel_id=data.id,
+        )
+    except ParcelNotFoundException:
+        raise ParcelNotFoundHTTPException
+    except ParcelAlreadyAssignedException:
+        raise ParcelAlreadyAssignedHTTPException

@@ -1,14 +1,18 @@
-from taskiq import TaskiqScheduler
+from taskiq import InMemoryBroker, TaskiqScheduler
 import taskiq_fastapi
-from taskiq_redis import RedisStreamBroker, RedisAsyncResultBackend
 from taskiq.schedule_sources import LabelScheduleSource
 
-from src.config import settings
 
-result_backend = RedisAsyncResultBackend(settings.REDIS_URL)
+# result_backend = RedisAsyncResultBackend(settings.REDIS_URL)
 
-broker = RedisStreamBroker(url=settings.REDIS_URL)
-broker = broker.with_result_backend(result_backend)
+# broker = RedisStreamBroker(url=settings.REDIS_URL)
+
+# broker = broker.with_result_backend(result_backend)
+
+# if settings.MODE == "TEST":
+#     broker = InMemoryBroker()
+
+broker = InMemoryBroker()
 
 scheduler = TaskiqScheduler(
     broker=broker,
