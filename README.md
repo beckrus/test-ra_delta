@@ -27,3 +27,5 @@ docker-compose up -d
 
 # API available at http://localhost:8000
 # Docs at http://localhost:8000/docs
+
+❗ docker-compose_test.yml - db and redis for tests
