@@ -29,3 +29,5 @@ docker-compose up -d
 # Docs at http://localhost:8000/docs
 
 ❗ docker-compose_test.yml - db and redis for tests
+
+🍪 The session ID is created after the first parcel registration and stored in a cookie
