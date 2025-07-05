@@ -7,6 +7,7 @@ from src.models.parcels_types import ParcelTypesOrm
 if typing.TYPE_CHECKING:
     from src.models.parcels_types import ParcelTypesOrm
 
+
 class ParcelsOrm(Base):
     __tablename__ = "parcels"
 

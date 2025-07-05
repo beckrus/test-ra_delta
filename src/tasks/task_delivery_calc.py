@@ -1,50 +1,43 @@
 import logging
-from exceptions import ParcelNotFoundException
-from repository.parcels import ParcelsRepository
+import math
 from src.api.dependencies import get_db_manager_null_pull
-from src.tasks.celery import celery_app
-from src.tasks.task_exchange import get_current_usd_rate
+from src.utils.exchange_rate import get_current_usd_rate
+from src.schemas.parcels import ParcelUpdateCostDTO
+from src.tasks.taskiq import broker
 
 logger = logging.getLogger(__name__)
 
 
-async def calculate_delivery_cost_for_parcel(parcel_id: int) -> bool:
+def calc_cost(weight: float, cost_usd: float, usd_rate: float):
+    """ weight in gramms
+        Стоимость = (вес в кг * 0.5 + стоимость содержимого в долларах * 0.01 ) * курс доллара к рублю
     """
-    Celery task to calc delyvery cost
-    Args:
-        parcel_id: int
-    Returns:
-        bool: True if succes, False on error
-    """
-    try:
-        logger.info(f"Calculating delivery cost for parcel ID: {parcel_id}")
-        
-        usd_rate = await get_current_usd_rate()
-        logger.info(f"Rate USD/RUB: {usd_rate}")
-        
-        async with get_db_manager_null_pull() as db:
-            parcel = await db.parcels.get_by_id_wo_session(parcel_id)
-                
-            delivery_cost = (parcel.weight * 0.5 + parcel.cost_usd * 0.01) * usd_rate
-            
-            logger.info(
-                f"Delivery calculation ID {parcel_id}: "
-                f"weight={parcel.weight}gramms, cost={parcel.cost_usd}$, "
-                f"rate={usd_rate}, total={delivery_cost:.2f}₽"
-            )
+    result = ((weight/1000) * 0.5 + cost_usd * 0.01) * usd_rate
+    return round(result, 2)
 
-            await db.parcels.update_delivery_cost(parcel_id, delivery_cost)
-            await db.commit()
-            
-            logger.info(f"Delivery cost for ID {parcel_id} sucessfully calculated: {delivery_cost:.2f}₽")
+
+@broker.task(schedule=[{"cron": "*/1 * * * *"}])
+async def calculate_delivery_cost_for_parcel() -> bool:
+    logger.info("Calculating delivery cost for parcels")
+
+    usd_rate = await get_current_usd_rate()
+    logger.info(f"Rate USD/RUB: {usd_rate}")
+
+    async with get_db_manager_null_pull() as db:
+        parcels = await db.parcels.get_without_delivery_cost()
+        if not parcels:
+            logger.info("No parcels to update cost")
             return True
-    except ParcelNotFoundException as e:
-        logger.error(f"Parsel not found or already calculated ID {parcel_id}: {e}")
-        return False
-    except Exception as e:
-        logger.error(f"Something went wrong ID {parcel_id}: {e}")
-        return False
-    
+        logger.info(f"Parcels to update cost: {len(parcels)}")
 
+        data_update = [
+            ParcelUpdateCostDTO.model_validate(
+                {"id": n.id, "delivery_cost": calc_cost(n.weight, n.cost_usd, usd_rate)}
+            )
+            for n in parcels
+        ]
+        res = await db.parcels.update_delivery_cost_batch(data_update)
+        await db.commit()
 
-# @celery_app.task(bind=True)
+        logger.info(f"Delivery cost sucessfully calculated for {res} parcels")
+        return True

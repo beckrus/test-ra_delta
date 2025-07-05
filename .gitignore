@@ -16,3 +16,5 @@ venv
 cache
 
 .env
+
+celerybeat-schedule

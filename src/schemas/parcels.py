@@ -16,6 +16,7 @@ class AddParcelDTO(RegisterParcelDTO):
 class ParcelIdDTO(BaseModel):
     id: int
 
+
 class ResponseParcelDTO(ParcelIdDTO):
     name: str = Field(max_length=100)
     weight: float = Field(ge=1)
@@ -23,7 +24,7 @@ class ResponseParcelDTO(ParcelIdDTO):
     cost_usd: float
     delivery_cost: float | None = None
 
-    @field_serializer('delivery_cost')
+    @field_serializer("delivery_cost")
     def serialize_delivery_cost(self, value: float | None) -> str | float:
         if value is None:
             return "Не рассчитано"
@@ -35,3 +36,7 @@ class ParcelFiltersDTO(BaseModel):
     offset: int = Field(default=0, ge=0)
     type_id: int | None = None
     has_delivery_cost: bool | None = None
+
+
+class ParcelUpdateCostDTO(ParcelIdDTO):
+    delivery_cost: float
