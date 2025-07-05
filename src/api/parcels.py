@@ -88,7 +88,8 @@ async def get_my_parcel_by_id(
 
 @router.post("/{parcel_id}/assign-transport")
 async def assign_transport_company(
-    data: AssignTransportDTO, db: DBDep) -> AssignTransportResponseDTO:
+    data: AssignTransportDTO, db: DBDep
+) -> AssignTransportResponseDTO:
     try:
         result = await db.parcels.assign_transport_company(
             parcel_id=data.id, transport_company_id=data.transport_company_id

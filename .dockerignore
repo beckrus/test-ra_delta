@@ -1,0 +1,15 @@
+.env_example
+.env_test
+.env
+venv
+.venv
+.idea
+.mypy_cache
+__pycache__
+.venv_linux
+msql_data
+cache
+.ruff_cache
+.pytest_cache
+*.pyc
+.git

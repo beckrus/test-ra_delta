@@ -23,3 +23,46 @@ services:
       - ./cache:/data
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+  backend:
+    container_name: "post_backend"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - 8000:8000
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+  taskiq-worker:
+    container_name: "post_taskiq_worker"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    command: ["taskiq", "worker", "src.tasks.taskiq:broker"]
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+  taskiq-scheduler:
+    container_name: "post_taskiq_scheduler"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    command: ["taskiq", "scheduler", "src.tasks.taskiq:scheduler"]
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
