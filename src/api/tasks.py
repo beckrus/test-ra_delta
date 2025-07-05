@@ -10,14 +10,22 @@ from src.tasks.taskiq import broker
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
 
-@router.post("/update-costs")
+@router.post(
+    "/update-costs",
+    summary="Start task for calculate delivery cost",
+    description="Force to start task for calculate delivery cost",
+)
 async def update_parcels_delivery_cost() -> TaskResponseDTO:
     task = await calculate_delivery_cost_for_parcel.kiq()
     task_id = task.task_id
     return TaskResponseDTO(task_id=task_id)
 
 
-@router.get("/task-status/{task_id}")
+@router.get(
+    "/task-status/{task_id}",
+    summary="Task info",
+    description="Return info about the task from taskiq",
+)
 async def get_task_status(task_id: str) -> TaskResultDTO:
     try:
         result = await broker.result_backend.get_result(task_id)

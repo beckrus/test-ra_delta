@@ -86,7 +86,11 @@ async def get_my_parcel_by_id(
         raise ParcelNotFoundHTTPException from e
 
 
-@router.post("/{parcel_id}/assign-transport")
+@router.post(
+    "/{parcel_id}/assign-transport",
+    summary="Assign parcel to transport company",
+    description="Atomically assigns a parcel to a transport company with race condition protection",
+)
 async def assign_transport_company(
     data: AssignTransportDTO, db: DBDep
 ) -> AssignTransportResponseDTO:
