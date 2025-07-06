@@ -39,7 +39,6 @@ async def register_parcel(
                 key="session_id",
                 value=session_id,
                 httponly=True,
-                secure=True,
             )
         result = await db.parcels.add(data, session_id)
         await db.commit()
