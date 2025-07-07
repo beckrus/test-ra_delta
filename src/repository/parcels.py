@@ -12,6 +12,7 @@ from src.exceptions import (
 )
 from src.schemas.parcels import (
     AddParcelDTO,
+    AssignTransportResponseDTO,
     ParcelFiltersDTO,
     ParcelIdDTO,
     ParcelUpdateCostDTO,
@@ -125,8 +126,15 @@ class ParcelsRepository:
         )
         await self.session.execute(stmt)
 
-    async def assign_transport_company(self, parcel_id: int, transport_company_id: int) -> bool:
-        stmt = select(self.model).filter_by(id=parcel_id).with_for_update()
+    async def assign_transport_company(
+        self, parcel_id: int, transport_company_id: int
+    ) -> AssignTransportResponseDTO:
+        stmt = (
+            select(self.model)
+            .options(selectinload(self.model.type))
+            .filter_by(id=parcel_id)
+            .with_for_update()
+        )
         result = await self.session.execute(stmt)
         parcel = result.scalars().one_or_none()
         if not parcel:
@@ -139,8 +147,15 @@ class ParcelsRepository:
             .values(transport_company_id=transport_company_id)
         )
         await self.session.execute(update_stmt)
-
-        return True
+        return AssignTransportResponseDTO(
+            id=parcel.id,
+            name=parcel.name,
+            weight=parcel.weight,
+            type=parcel.type.name,
+            cost_usd=parcel.cost_usd,
+            delivery_cost=parcel.delivery_cost,
+            transport_company_id=transport_company_id,
+        )
 
     async def update_delivery_cost_batch(self, delivery_costs: list[ParcelUpdateCostDTO]) -> int:
         data = [n.model_dump() for n in delivery_costs]

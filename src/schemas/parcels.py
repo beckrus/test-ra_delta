@@ -42,11 +42,5 @@ class ParcelUpdateCostDTO(ParcelIdDTO):
     delivery_cost: float
 
 
-class AssignTransportDTO(ParcelIdDTO):
+class AssignTransportResponseDTO(ResponseParcelDTO):
     transport_company_id: int = Field(gt=0)
-
-
-class AssignTransportResponseDTO(BaseModel):
-    success: bool
-    message: str
-    parcel_id: int

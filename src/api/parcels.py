@@ -11,7 +11,6 @@ from src.exceptions import (
     TypeNotFoundHTTPException,
 )
 from src.schemas.parcels import (
-    AssignTransportDTO,
     AssignTransportResponseDTO,
     ParcelFiltersDTO,
     RegisterParcelDTO,
@@ -91,18 +90,14 @@ async def get_my_parcel_by_id(
     description="Atomically assigns a parcel to a transport company with race condition protection",
 )
 async def assign_transport_company(
-    data: AssignTransportDTO, db: DBDep
+    parcel_id: int, transport_company_id: int, db: DBDep
 ) -> AssignTransportResponseDTO:
     try:
         result = await db.parcels.assign_transport_company(
-            parcel_id=data.id, transport_company_id=data.transport_company_id
+            parcel_id=parcel_id, transport_company_id=transport_company_id
         )
         await db.commit()
-        return AssignTransportResponseDTO(
-            success=result,
-            message=f"Parcel succesfully assigned to the transport company with id {data.transport_company_id}",
-            parcel_id=data.id,
-        )
+        return result
     except ParcelNotFoundException:
         raise ParcelNotFoundHTTPException
     except ParcelAlreadyAssignedException:
